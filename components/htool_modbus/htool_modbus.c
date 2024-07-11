@@ -112,7 +112,7 @@ int32_t get_register_values(int32_t sock, uint8_t unit_id, uint16_t start_reg, u
             return MODBUS_ERR;
         }
         else {
-            ESP_LOGW(TAG, "response was too short - %d chars", resp_len);
+            ESP_LOGW(TAG, "response was too short - %d chars", (int)resp_len);
             return MODBUS_ERR;
         }
     }
@@ -122,7 +122,7 @@ int32_t get_register_values(int32_t sock, uint8_t unit_id, uint16_t start_reg, u
         return MODBUS_ERR;
     }
     else if (resp_len != (MB_MIN_RESPONSE_MSG_LENGTH + 2 * num_regs)) { // Validate response size
-        ESP_LOGD(TAG, "Incorrect response size is %d expected %d", resp_len, (9 + 2 * num_regs));
+        ESP_LOGD(TAG, "Incorrect response size is %d expected %d", (int)resp_len, (9 + 2 * num_regs));
         return MODBUS_ERR;
     }
 
@@ -253,15 +253,15 @@ int32_t modbus_tcp_client_connect(const char *host, const uint16_t *port) {
     struct timeval tv;
     tv.tv_sec = MB_RECV_TIMEOUT_S;
     tv.tv_usec = 0;
-    ESP_LOGD(TAG, "Set send and receive timeout to %ld", tv.tv_sec);
+    ESP_LOGD(TAG, "Set send and receive timeout to %ld", (long int)tv.tv_sec);
     if (setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv)) < 0) {
-        ESP_LOGE(TAG, "Error setting receive timeout to %ld seconds.", tv.tv_sec);
+        ESP_LOGE(TAG, "Error setting receive timeout to %ld seconds.", (long int)tv.tv_sec);
         shutdown(sock, 0);
         close(sock);
         return MODBUS_ERR;
     }
     if (setsockopt(sock, SOL_SOCKET, SO_SNDTIMEO, &tv, sizeof(tv)) < 0) {
-        ESP_LOGE(TAG, "Error setting send timeout to %ld seconds.", tv.tv_sec);
+        ESP_LOGE(TAG, "Error setting send timeout to %ld seconds.", (long int)tv.tv_sec);
         shutdown(sock, 0);
         close(sock);
         return MODBUS_ERR;
@@ -279,7 +279,7 @@ int32_t modbus_tcp_client_connect(const char *host, const uint16_t *port) {
 
 
 int32_t modbus_tcp_client_disconnect(int32_t sock) {
-    ESP_LOGD(TAG, "Closing socket connection! Socket=%i", sock);
+    ESP_LOGD(TAG, "Closing socket connection! Socket=%li", sock);
     if (sock != -1) {
         shutdown(sock, 0);
         close(sock);

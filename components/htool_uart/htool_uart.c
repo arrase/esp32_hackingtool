@@ -29,6 +29,7 @@ SOFTWARE.
 #include "esp_system.h"
 #include "esp_console.h"
 #include "esp_vfs_dev.h"
+#include "esp_random.h"
 #include "driver/uart.h"
 #include "htool_wifi.h"
 #include "linenoise/linenoise.h"
@@ -36,10 +37,10 @@ SOFTWARE.
 #include "string.h"
 #include "htool_api.h"
 #include "argtable3/argtable3.h"
-#include "htool_display.h"
 #include "htool_netman.h"
 #include "wchar.h"
 #include <stdio_ext.h>
+#include "esp_timer.h"
 
 #define TAG "htool_api"
 #define USER_KEY "_user"
@@ -377,7 +378,6 @@ static int deauth_command() {
     uint8_t input;
     while (true) {
         if ((input = scan_for_networs_and_wait_for_input(true))) {
-            menu_cnt = input - 1; // TODO: change handling //--> remove menucount
             htool_api_start_deauther();
             printf("Press \033[31;1many\033[36;1m key for stopping deauth!\n");
             while (true) {
@@ -833,14 +833,12 @@ static int beacon_spammer_command(int32_t argc, char** argv) {
                    if (!(number = scan_for_networs_and_wait_for_input(true))) {
                        continue;
                    }
-                   menu_cnt = number;
                    htool_api_start_beacon_spammer(1);
                }
                else if (number == 3) {
                    if (!(number = scan_for_networs_and_wait_for_input(true))) {
                        continue;
                    }
-                   menu_cnt = number;
                    htool_api_start_beacon_spammer(2);
                }
                else {

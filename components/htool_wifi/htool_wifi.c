@@ -23,11 +23,12 @@ SOFTWARE.
 #include "htool_wifi.h"
 #include "esp_err.h"
 #include "esp_wifi_types.h"
-#include "htool_display.h"
+#include "esp_mac.h"
 #include "htool_api.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "esp_system.h"
+#include "esp_random.h"
 //#include "esp_spi_flash.h"
 #include "lwip/sockets.h"
 #include "lwip/err.h"
@@ -106,6 +107,8 @@ uint8_t global_scans_count = 0;
 uint8_t channel;
 
 uint8_t beacon_ssid_index = 0;
+
+uint8_t menu_cnt = 0;
 
 bool perform_active_scan = false;
 
@@ -1015,7 +1018,6 @@ static void wifi_handling_task(void *pvParameters) {
                 if (scan_manually_stopped) {
                     scan_manually_stopped = false;
                     perform_active_scan = false;
-                    scan_started = false;
                     ESP_LOGI(TAG, "Scan manually stopped");
                     break;
                 }
@@ -1024,7 +1026,6 @@ static void wifi_handling_task(void *pvParameters) {
                 global_scans_num = 32;
                 ESP_LOGI(TAG, "Scan count: %d", global_scans_count);
                 perform_active_scan = false;
-                scan_started = false;
             }
             else {
                 perform_active_scan = false;
@@ -1047,7 +1048,6 @@ static void wifi_handling_task(void *pvParameters) {
                 if (scan_manually_stopped) {
                     scan_manually_stopped = false;
                     perform_passive_scan = false;
-                    scan_started = false;
                     ESP_LOGI(TAG, "Scan manually stopped");
                     break;
                 }
@@ -1056,7 +1056,6 @@ static void wifi_handling_task(void *pvParameters) {
                 global_scans_num = 32;
                 ESP_LOGI(TAG, "Scan count: %d", global_scans_count);
                 perform_passive_scan = false;
-                scan_started = false;
             }
             else {
                 perform_passive_scan = false;

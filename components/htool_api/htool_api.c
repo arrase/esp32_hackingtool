@@ -22,10 +22,8 @@ SOFTWARE.
 #include <stdio.h>
 #include "htool_api.h"
 #include "htool_wifi.h"
-#include "htool_display.h"
 #include <esp_event.h>
 #include <esp_log.h>
-#include "htool_pn532_spi.h"
 #include "htool_uart.h"
 #include "htool_ble.h"
 
@@ -170,15 +168,10 @@ void htool_api_init () {
         ESP_LOGE(TAG, "Error at init HTool_Wifi!");
         abort();
     }
-    htool_display_init();
     htool_uart_cli_init();
 }
 
 void htool_api_start() {
     htool_wifi_start();
-    htool_display_start();
     htool_uart_cli_start();
-    //Debug
-    //htool_pn532_spi_init(27, 26, 25, 33);
-    //htool_pn532_spi_start();
 }

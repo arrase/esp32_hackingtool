@@ -35,6 +35,7 @@ SOFTWARE.
 #include "lwip/netif.h"
 #include "esp_netif.h"
 #include "esp_netif_net_stack.h"
+#include "esp_timer.h"
 
 static const char TAG[] = "networkmanager";
 
@@ -125,7 +126,7 @@ static int32_t socket_add_ipv4_multicast_group(int32_t sock, char *ip) {
 
     // Configure source interface
     if ((rc = esp_netif_get_ip_info(htool_wifi_get_current_netif(), &ip_info)) != ESP_OK) {
-        ESP_LOGE(TAG, "Failed to get IP address info. Error 0x%x", rc);
+        ESP_LOGE(TAG, "Failed to get IP address info. Error 0x%x", (unsigned int)rc);
         goto err;
     }
     inet_addr_from_ip4addr(&inet_addr, &ip_info.ip);
@@ -176,20 +177,20 @@ static int32_t create_multicast_ipv4_socket(char *ip, uint16_t *port) {
     sock_addr.sin_port = htons(*port);
     sock_addr.sin_addr.s_addr = htonl(INADDR_ANY);
     if ((rc = bind(sock, (struct sockaddr *) &sock_addr, sizeof(struct sockaddr_in))) < 0) {
-        ESP_LOGE(TAG, "Failed to bind socket! RC=%i", rc);
+        ESP_LOGE(TAG, "Failed to bind socket! RC=%li", rc);
         goto err;
     }
 
     // Assign multicast TTL (set separately from normal interface TTL)
     uint8_t ttl = MULTICAST_TTL;
     if ((rc = setsockopt(sock, IPPROTO_IP, IP_MULTICAST_TTL, &ttl, sizeof(uint8_t))) < 0) {
-        ESP_LOGE(TAG, "Failed to set IP_MULTICAST_TTL! RC=%i", rc);
+        ESP_LOGE(TAG, "Failed to set IP_MULTICAST_TTL! RC=%li", rc);
         goto err;
     }
 
     // This is also a listening socket, so add it to the multicast group for listening...
     if ((rc = socket_add_ipv4_multicast_group(sock, ip)) < 0) {
-        ESP_LOGE(TAG, "Failed to add socket to multicast group! RC=%i", rc);
+        ESP_LOGE(TAG, "Failed to add socket to multicast group! RC=%li", rc);
         goto err;
     }
 
@@ -283,18 +284,18 @@ void htool_netman_handle_request(char *data, uint16_t len, char **response_json,
                                     if (content_length > HTTP_MAX_RESP_BUFFER) {
                                         content_length = HTTP_MAX_RESP_BUFFER;
                                     }
-                                    ESP_LOGD(TAG, "content len %u", content_length);
+                                    ESP_LOGD(TAG, "content len %lu", content_length);
                                     if (content_length >= 0) {
                                         // *: {"status": 0, "uri": "/api/v1/values.json?all&test=1", "body": "{"key":"power_ac"}", "type": "1", "header": "HTTP1.1 Content-Length: 321", "data":"{"power_ac: 600"}", "http_status": 200, "ts": 1691654105}
                                         if (content_length != 0) {
                                             int32_t data_read;
                                             char *resp_str = malloc(content_length * sizeof(char)); //TODO: allow extern alloc?
                                             data_read = esp_http_client_read_response(client, resp_str, content_length);
-                                            ESP_LOGD(TAG, "data read: %u", data_read);
+                                            ESP_LOGD(TAG, "data read: %lu", data_read);
                                             if (data_read > 0) {
                                                 char *resp_escaped = htool_system_escape_quotes(resp_str, data_read);
                                                 status = NETMAN_STATUS_OK;
-                                                *resp_len = asprintf(response_json, "{\"status\":\"%s\",\"uri:\":\"%s\",\"http_status\":%u,\"content_length\":%u,\"data\":\"%s\"}", netman_status_enum_to_string(status), uri->valuestring, esp_http_client_get_status_code(client), content_length, resp_escaped);
+                                                *resp_len = asprintf(response_json, "{\"status\":\"%s\",\"uri:\":\"%s\",\"http_status\":%u,\"content_length\":%lu,\"data\":\"%s\"}", netman_status_enum_to_string(status), uri->valuestring, esp_http_client_get_status_code(client), content_length, resp_escaped);
                                                 print(*response_json);
                                                 FREE_MEM(resp_escaped);
                                             }
@@ -313,7 +314,7 @@ void htool_netman_handle_request(char *data, uint16_t len, char **response_json,
                                             if (data_read > 0) {
                                                 status = NETMAN_STATUS_OK;
                                                 char *resp_escaped = htool_system_escape_quotes(resp_str, data_read);
-                                                *resp_len = asprintf(response_json, "{\"status\":\"%s\",\"uri:\":\"%s\",\"http_status\":%u,\"content_length\":%u,\"data\":\"%s\"}", netman_status_enum_to_string(status), uri->valuestring, esp_http_client_get_status_code(client), content_length, resp_escaped);
+                                                *resp_len = asprintf(response_json, "{\"status\":\"%s\",\"uri:\":\"%s\",\"http_status\":%u,\"content_length\":%lu,\"data\":\"%s\"}", netman_status_enum_to_string(status), uri->valuestring, esp_http_client_get_status_code(client), content_length, resp_escaped);
                                                 print(*response_json);
                                                 FREE_MEM(resp_escaped);
                                             }
@@ -399,7 +400,7 @@ void htool_netman_handle_request(char *data, uint16_t len, char **response_json,
                                                 value_union values;
                                                 if (modbus_tcp_client_read(sock, unit->valueint, addr->valueint, regs->valueint, big_endian, (uint8_t *)&values)) {
                                                     status = NETMAN_STATUS_OK;
-                                                    *resp_len = asprintf(response_json, "{\"status\":\"%s\",\"unit:\":%hhu,\"addr\":%hu,\"regs\":%hhu,\"values\":\"u16: %hu, i16: %hi, u32: %u, i32: %i, f: %f\"}", netman_status_enum_to_string(status), unit->valueint, addr->valueint, regs->valueint, values.uint16_t, values.int16_t, values.uint32_t, values.int32_t, values.float_t);
+                                                    *resp_len = asprintf(response_json, "{\"status\":\"%s\",\"unit:\":%hhu,\"addr\":%hu,\"regs\":%hhu,\"values\":\"u16: %hu, i16: %hi, u32: %lu, i32: %li, f: %f\"}", netman_status_enum_to_string(status), unit->valueint, addr->valueint, regs->valueint, values.uint16_t, values.int16_t, values.uint32_t, values.int32_t, values.float_t);
                                                     print(*response_json);
                                                     ESP_LOGI(TAG, "Successfully read data");
                                                     goto exit;
@@ -536,7 +537,7 @@ void htool_netman_handle_request(char *data, uint16_t len, char **response_json,
                                                     char *escaped_response = htool_system_escape_quotes(response, recv_len + 1);
                                                     ESP_LOGD(TAG, "Received response: %s\n", response);
                                                     status = NETMAN_STATUS_OK;
-                                                    *resp_len = asprintf(response_json, "{\"status\":\"%s\",\"data_string\":\"%s\",\"data_hex\":\"%s\",\"data_len\":%u,\"sender_addr\":\"%s\",\"port\":%u}", netman_status_enum_to_string(status), escaped_response, buf_hex_string, recv_len, sender_addr, ntohs(recv_addr.sin_port));
+                                                    *resp_len = asprintf(response_json, "{\"status\":\"%s\",\"data_string\":\"%s\",\"data_hex\":\"%s\",\"data_len\":%lu,\"sender_addr\":\"%s\",\"port\":%u}", netman_status_enum_to_string(status), escaped_response, buf_hex_string, recv_len, sender_addr, ntohs(recv_addr.sin_port));
                                                     print(*response_json);
                                                     FREE_MEM(buf_hex_string);
                                                     FREE_MEM(escaped_response);
@@ -651,7 +652,7 @@ void htool_netman_handle_request(char *data, uint16_t len, char **response_json,
                                             char *escaped_string = htool_system_escape_quotes(response, recv_len + 1);
                                             ESP_LOGD(TAG, "Received response: %s\n", escaped_string);
                                             status = NETMAN_STATUS_OK;
-                                            *resp_len = asprintf(response_json, "{\"status\":\"%s\",\"data_string\":\"%s\",\"data_hex\":\"%s\",\"data_len\":%u,\"sender_addr\":\"%s\",\"port\":%u}", netman_status_enum_to_string(status), escaped_string, buf_hex_string, recv_len, sender_addr, ntohs(recv_addr.sin_port));
+                                            *resp_len = asprintf(response_json, "{\"status\":\"%s\",\"data_string\":\"%s\",\"data_hex\":\"%s\",\"data_len\":%lu,\"sender_addr\":\"%s\",\"port\":%u}", netman_status_enum_to_string(status), escaped_string, buf_hex_string, recv_len, sender_addr, ntohs(recv_addr.sin_port));
                                             print(*response_json);
                                             FREE_MEM(escaped_string);
                                             FREE_MEM(buf_hex_string);
