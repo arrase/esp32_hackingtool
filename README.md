@@ -21,8 +21,8 @@ Follow these steps to set up the environment and build the project:
 1. **Clone the repository:**
 
     ```sh
-    git clone https://github.com/arrase/esp_hacking_tool.git
-    cd esp_hacking_tool
+    git clone https://github.com/arrase/esp32_hackingtool.git
+    cd esp32_hackingtool
     ```
 
 2. **Set up the ESP-IDF environment:**
