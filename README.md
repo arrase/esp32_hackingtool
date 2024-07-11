@@ -11,7 +11,7 @@ This repository is a fork of the original project [Kl0ibi/esp32_hackingtool](htt
 ## Requirements
 
 - ESP32
-- [ESP-IDF 5.2.2](https://docs.espressif.com/projects/esp-idf/en/v5.2.2/esp-idf)
+- [ESP-IDF 5.2.2](https://docs.espressif.com/projects/esp-idf/en/v5.2.2/esp32/)
 - USB cable for terminal connection
 
 ## Installation
