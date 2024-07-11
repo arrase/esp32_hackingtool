@@ -27,7 +27,7 @@ Follow these steps to set up the environment and build the project:
 
 2. **Set up the ESP-IDF environment:**
 
-    Follow the official instructions to [set up the ESP-IDF](https://docs.espressif.com/projects/esp-idf/en/v5.2.2/get-started/index.html#step-4-set-up-the-tools).
+    Follow the official instructions to [set up the ESP-IDF](https://docs.espressif.com/projects/esp-idf/en/v5.2.2/esp32/get-started/index.html#installation).
 
 3. **Build the project:**
 
