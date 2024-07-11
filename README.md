@@ -50,5 +50,5 @@ Follow these steps to set up the environment and build the project:
 
 ## Usage
 
-Once the device is flashed and connected, open a terminal and use `idf.py monitor` to interact with the hacking tool via the CLI.
+Once the device is flashed and connected, open a terminal and use `idf.py monitor` to interact with the tool via the CLI.
 
